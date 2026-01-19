@@ -1,0 +1,36 @@
+name: Post Page 1 (Sacstatus)
+
+on:
+  schedule:
+    - cron: '30 5 * * *'  # 11:00 IST
+    - cron: '30 9 * * *'  # 15:00 IST
+    - cron: '30 14 * * *' # 20:00 IST
+  workflow_dispatch:
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run posting script
+        env:
+          POSTING_TOKEN: ${{ secrets.POSTING_TOKEN }}
+        run: python post_to_facebook.py --page 486622424525528
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add last_posted.json new_deals.json
+          git commit -m "Update state post-page1 [skip ci]" || echo "No changes to commit"
+          git push

@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+node_modules/
+last_posted.json
+new_deals.json
+*.png
+.vscode/
+venv/
+env/
+verify_fb.py
+verify_deals.py
+debug_selectors.py
+extract_deals.py
