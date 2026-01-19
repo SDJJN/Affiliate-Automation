@@ -35,6 +35,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add last_posted_pin.json
+          git add last_posted_pin.json || echo "No history file to add"
           git commit -m "Update state post-pinterest [skip ci]" || echo "No changes to commit"
           git push
