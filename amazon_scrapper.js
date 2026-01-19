@@ -1,5 +1,5 @@
 require('dotenv').config();
-const puppeteer = require('puppeteer-core');
+const puppeteer = require('puppeteer');
 const fs = require('fs').promises;
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
@@ -118,12 +118,19 @@ async function scrapeCategory(page, category) {
 async function main() {
     let browser;
     try {
-        browser = await puppeteer.launch({
+        const launchOptions = {
             headless: "new",
-            executablePath: process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
             args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
             timeout: 60000
-        });
+        };
+
+        // If running on Windows locally, use Chrome path. 
+        // In GitHub Actions (Linux), let puppeteer find its own Chromium.
+        if (process.platform === 'win32') {
+            launchOptions.executablePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+        }
+
+        browser = await puppeteer.launch(launchOptions);
         const page = await browser.newPage();
         await page.setUserAgent(userAgents[0]);
         await page.setViewport({ width: 1280, height: 1280 });

@@ -4,7 +4,7 @@
   "description": "Automated Amazon deal extractor and Facebook poster",
   "main": "amazon_scrapper.js",
   "dependencies": {
-    "puppeteer-core": "^24.35.0",
+    "puppeteer": "^21.0.0",
     "uuid": "^9.0.1",
     "dotenv": "^16.0.0"
   },

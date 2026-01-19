@@ -1,6 +1,5 @@
-# Amazon Deals Affiliate Automation
-
-This project automates the extraction of Amazon deals, appends affiliate IDs, and posts them to Facebook.
+# Amazon Deals Affiliate Automation Bot
+Automated Amazon deal extractor and Facebook poster. This bot scrapes high-discount deals from Amazon India and posts them to multiple Facebook pages on a custom schedule.
 
 ## Features
 - Scrapes deals from reliable sources (DesiDime/DealsMagnet).

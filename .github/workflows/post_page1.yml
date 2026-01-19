@@ -6,6 +6,8 @@ on:
     - cron: '30 9 * * *'  # 15:00 IST
     - cron: '30 14 * * *' # 20:00 IST
   workflow_dispatch:
+permissions:
+  contents: write
 
 jobs:
   post:
