@@ -55,11 +55,21 @@ def post_to_facebook(target_page_id):
     msg += "#AmazonDeals #BestDeals #Savings #ShopNow"
 
     try:
-        response = graph.put_object(
-            parent_object=target_page_id,
-            connection_name="feed",
-            message=msg
-        )
+        # Post as a Photo for better engagement if image is available
+        if deal.get('imageUrl'):
+            response = graph.put_object(
+                parent_object=target_page_id,
+                connection_name="photos",
+                url=deal['imageUrl'],
+                caption=msg
+            )
+        else:
+            # Fallback to plain text if no image URL found
+            response = graph.put_object(
+                parent_object=target_page_id,
+                connection_name="feed",
+                message=msg
+            )
         print(f"Successfully posted {deal['asin']} to {target_page_id} -> {response['id']}")
         
         # Add to history
