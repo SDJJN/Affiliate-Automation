@@ -2,9 +2,10 @@ name: Post Page 1 (Sacstatus)
 
 on:
   schedule:
-    - cron: '30 5 * * *'  # 11:00 IST
-    - cron: '30 9 * * *'  # 15:00 IST
-    - cron: '30 14 * * *' # 20:00 IST
+    - cron: '30 5 * * *'  # 11:00 AM IST
+    - cron: '30 9 * * *'  # 03:00 PM IST
+    - cron: '30 14 * * *' # 08:00 PM IST
+    - cron: '6 16 * * *'  # 09:36 PM IST
   workflow_dispatch:
 permissions:
   contents: write
