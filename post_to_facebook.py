@@ -57,12 +57,25 @@ def post_to_facebook(target_page_id):
     try:
         # Post as a Photo for better engagement if image is available
         if deal.get('imageUrl'):
+            # 1. Post to Feed
             response = graph.put_object(
                 parent_object=target_page_id,
                 connection_name="photos",
                 url=deal['imageUrl'],
                 caption=msg
             )
+            print(f"Successfully posted Feed Photo for {deal['asin']} to {target_page_id} -> {response['id']}")
+
+            # 2. Post to Story (Experimental endpoint)
+            try:
+                story_response = graph.put_object(
+                    parent_object=target_page_id,
+                    connection_name="photo_stories",
+                    url=deal['imageUrl']
+                )
+                print(f"Successfully posted Story for {deal['asin']} to {target_page_id} -> {story_response.get('id', 'Done')}")
+            except Exception as e:
+                print(f"Note: Could not post Story for {deal['asin']} (Might require additional permissions): {e}")
         else:
             # Fallback to plain text if no image URL found
             response = graph.put_object(
@@ -70,7 +83,7 @@ def post_to_facebook(target_page_id):
                 connection_name="feed",
                 message=msg
             )
-        print(f"Successfully posted {deal['asin']} to {target_page_id} -> {response['id']}")
+            print(f"Successfully posted Feed Message for {deal['asin']} to {target_page_id} -> {response['id']}")
         
         # Add to history
         last_posted.append(deal['link'])

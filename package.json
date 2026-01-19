@@ -4,9 +4,9 @@
   "description": "Automated Amazon deal extractor and Facebook poster",
   "main": "amazon_scrapper.js",
   "dependencies": {
+    "dotenv": "^16.6.1",
     "puppeteer-core": "^21.0.0",
-    "uuid": "^9.0.1",
-    "dotenv": "^16.0.0"
+    "uuid": "^9.0.1"
   },
   "scripts": {
     "start": "node amazon_scrapper.js"
