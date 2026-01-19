@@ -12,7 +12,7 @@ load_dotenv()
 # Configuration
 FACEBOOK_TOKEN = os.getenv("POSTING_TOKEN")
 NEW_DEALS_FILE = "new_deals.json"
-LAST_POSTED_FILE = "last_posted.json"
+LAST_POSTED_FILE = "last_posted_fb.json"
 
 def post_to_facebook(target_page_id):
     if not FACEBOOK_TOKEN:
@@ -25,19 +25,12 @@ def post_to_facebook(target_page_id):
 
     with open(NEW_DEALS_FILE, "r") as f:
         try:
-            all_new_deals = json.load(f)
+            all_deals = json.load(f)
         except:
             print("Error reading new_deals.json")
             return
 
-    if not all_new_deals:
-        print(f"No new deals in the list for page {target_page_id}.")
-        return
-
-    # Pick ONE random deal
-    deal = random.choice(all_new_deals)
-    print(f"Selected deal: {deal['asin']} for page {target_page_id}")
-
+    # Load history
     last_posted = []
     if os.path.exists(LAST_POSTED_FILE):
         try:
@@ -45,6 +38,17 @@ def post_to_facebook(target_page_id):
                 last_posted = json.load(f)
         except:
             last_posted = []
+
+    # Filter out already posted deals
+    available_deals = [d for d in all_deals if d['link'] not in last_posted]
+
+    if not available_deals:
+        print(f"No new unique deals left for page {target_page_id}.")
+        return
+
+    # Pick ONE random deal from available pool
+    deal = random.choice(available_deals)
+    print(f"Selected deal: {deal['asin']} for page {target_page_id}")
 
     graph = facebook.GraphAPI(access_token=FACEBOOK_TOKEN)
     
@@ -88,15 +92,9 @@ def post_to_facebook(target_page_id):
         # Add to history
         last_posted.append(deal['link'])
         
-        # Remove from new_deals so it's not posted again today (by this or other pages)
-        all_new_deals = [d for d in all_new_deals if d['asin'] != deal['asin']]
-
-        # Save history and updated list
+        # Save history (Note: WE DO NOT DELETE FROM new_deals.json ANYMORE to allow other platforms to post)
         with open(LAST_POSTED_FILE, "w") as f:
             json.dump(last_posted, f, indent=4)
-        
-        with open(NEW_DEALS_FILE, "w") as f:
-            json.dump(all_new_deals, f, indent=4)
             
     except Exception as e:
         print(f"Error posting deal {deal['asin']} to {target_page_id}: {e}")

@@ -11,7 +11,7 @@ load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHANNEL_ID")
 NEW_DEALS_FILE = "new_deals.json"
-LAST_POSTED_FILE = "last_posted.json"
+LAST_POSTED_FILE = "last_posted_tele.json"
 
 def post_to_telegram():
     if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
@@ -24,15 +24,12 @@ def post_to_telegram():
 
     with open(NEW_DEALS_FILE, "r") as f:
         try:
-            all_new_deals = json.load(f)
+            all_deals = json.load(f)
         except:
             print("Error reading new_deals.json")
             return
 
-    if not all_new_deals:
-        print("No new deals in the list for Telegram.")
-        return
-
+    # Load history
     last_posted = []
     if os.path.exists(LAST_POSTED_FILE):
         try:
@@ -41,10 +38,17 @@ def post_to_telegram():
         except:
             last_posted = []
 
-    print(f"Starting Telegram broadcast of {len(all_new_deals)} deals...")
+    # Filter out already posted deals
+    available_deals = [d for d in all_deals if d['link'] not in last_posted]
 
-    # Post ALL deals
-    for deal in all_new_deals:
+    if not available_deals:
+        print("No new unique deals left for Telegram.")
+        return
+
+    print(f"Starting Telegram broadcast of {len(available_deals)} deals...")
+
+    # Post ALL available deals
+    for deal in available_deals:
         msg = f"🔥 {deal['title']}\n\n"
         msg += f"💰 Discount: {deal['discount']}\n"
         msg += f"👉 Link: {deal['affiliate_link']}\n\n"
@@ -78,11 +82,11 @@ def post_to_telegram():
         except Exception as e:
             print(f"Exception posting {deal['asin']}: {e}")
 
+    # Save history
     with open(LAST_POSTED_FILE, "w") as f:
         json.dump(last_posted, f, indent=4)
     
-    with open(NEW_DEALS_FILE, "w") as f:
-        json.dump([], f, indent=4)
+    # Note: WE DO NOT CLEAR new_deals.json ANYMORE to allow other platforms to post
 
 if __name__ == "__main__":
     post_to_telegram()

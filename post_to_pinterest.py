@@ -10,7 +10,7 @@ load_dotenv()
 PINTEREST_TOKEN = os.getenv("PINTEREST_ACCESS_TOKEN")
 BOARD_ID = os.getenv("PINTEREST_BOARD_ID")
 NEW_DEALS_FILE = "new_deals.json"
-LAST_POSTED_FILE = "last_posted.json"
+LAST_POSTED_FILE = "last_posted_pin.json"
 
 def post_to_pinterest():
     if not PINTEREST_TOKEN or not BOARD_ID:
@@ -23,19 +23,12 @@ def post_to_pinterest():
 
     with open(NEW_DEALS_FILE, "r") as f:
         try:
-            all_new_deals = json.load(f)
+            all_deals = json.load(f)
         except:
             print("Error reading new_deals.json")
             return
 
-    if not all_new_deals:
-        print("No new deals in the list for Pinterest.")
-        return
-
-    # Pick ONE random deal
-    deal = random.choice(all_new_deals)
-    print(f"Selected deal: {deal['asin']} for Pinterest")
-
+    # Load history
     last_posted = []
     if os.path.exists(LAST_POSTED_FILE):
         try:
@@ -43,6 +36,17 @@ def post_to_pinterest():
                 last_posted = json.load(f)
         except:
             last_posted = []
+
+    # Filter out already posted deals
+    available_deals = [d for d in all_deals if d['link'] not in last_posted]
+
+    if not available_deals:
+        print("No new unique deals left for Pinterest.")
+        return
+
+    # Pick ONE random deal from available pool
+    deal = random.choice(available_deals)
+    print(f"Selected deal: {deal['asin']} for Pinterest")
 
     # Pinterest API v5: Create Pin
     url = "https://api.pinterest.com/v5/pins"
@@ -76,15 +80,9 @@ def post_to_pinterest():
             # Add to history
             last_posted.append(deal['link'])
             
-            # Remove from new_deals
-            all_new_deals = [d for d in all_new_deals if d['asin'] != deal['asin']]
-
-            # Save history and updated list
+            # Save history (Note: WE DO NOT DELETE FROM new_deals.json ANYMORE to allow other platforms to post)
             with open(LAST_POSTED_FILE, "w") as f:
                 json.dump(last_posted, f, indent=4)
-            
-            with open(NEW_DEALS_FILE, "w") as f:
-                json.dump(all_new_deals, f, indent=4)
         else:
             print(f"Error posting Pin: {response.status_code} - {response.text}")
             
