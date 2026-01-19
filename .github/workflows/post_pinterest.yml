@@ -1,10 +1,6 @@
 name: Post to Pinterest
 
 on:
-  schedule:
-    - cron: '30 4 * * *'  # 10:00 AM IST
-    - cron: '30 8 * * *'  # 01:30 PM IST (Changed from 08:30 UTC to be more spread)
-    - cron: '30 12 * * *' # 06:00 PM IST
   workflow_dispatch:
 permissions:
   contents: write
