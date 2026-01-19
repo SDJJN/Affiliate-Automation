@@ -1,5 +1,5 @@
 require('dotenv').config();
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
 const fs = require('fs').promises;
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
@@ -124,10 +124,13 @@ async function main() {
             timeout: 60000
         };
 
-        // If running on Windows locally, use Chrome path. 
-        // In GitHub Actions (Linux), let puppeteer find its own Chromium.
+        // Auto-detect Chrome executable path
         if (process.platform === 'win32') {
+            // Your Windows path
             launchOptions.executablePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+        } else {
+            // GitHub Actions (Ubuntu) path
+            launchOptions.executablePath = '/usr/bin/google-chrome';
         }
 
         browser = await puppeteer.launch(launchOptions);
