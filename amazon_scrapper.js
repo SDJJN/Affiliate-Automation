@@ -94,11 +94,14 @@ async function scrapeCategory(page, category) {
                   || imageElement?.srcset?.match(/(.+?)\s2x/)?.[1]
                   || imageElement?.src || '').trim();
 
+             const imageElement1 = el.querySelector('img'); 
+                const imageUrl1 = imageElement ? imageElement.src : '';
+
                 
                 const asinMatch = rawUrl.match(/\/dp\/([A-Z0-9]{10})/) || rawUrl.match(/\/deal\/([A-Z0-9]{10})/) || rawUrl.match(/\/product\/([A-Z0-9]{10})/);
                 const asin = asinMatch ? asinMatch[1] : null;
 
-                return { title, rawUrl, asin, imageUrl };
+                return { title, rawUrl, asin, imageUrl, imageUrl1  };
             }, element);
 
             if (dealData.asin && dealData.title) {
@@ -112,6 +115,7 @@ async function scrapeCategory(page, category) {
                     title: dealData.title,
                     discount: discount,
                     imageUrl: dealData.imageUrl,
+                    imageUrl1: dealData.imageUrl1,
                     affiliate_link: cleanUrl,
                     link: `https://www.amazon.in/dp/${dealData.asin}`
                 });
