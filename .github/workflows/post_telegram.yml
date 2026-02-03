@@ -2,7 +2,8 @@ name: Post to Telegram
 
 on:
   schedule:
-    - cron: '30 16 * * *'  # 10:00 PM IST
+    - cron: '*/15 * * * *'
+
   workflow_dispatch:
 permissions:
   contents: write
