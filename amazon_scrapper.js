@@ -57,6 +57,7 @@ async function fetchProductDetails(page, url) {
     }
 }
 
+
 async function scrapeCategory(page, category) {
     try {
         console.log(`Scraping Amazon category: ${category.name}`);
@@ -87,8 +88,37 @@ async function scrapeCategory(page, category) {
                 const urlElement = el.querySelector('a.a-link-normal');
                 const rawUrl = urlElement ? urlElement.href : '';
                 
-                const imageElement = el.querySelector('img');
-                const imageUrl = imageElement ? imageElement.src : '';
+               const imageElement = el.querySelector('img');
+                
+                let imageUrl = '';
+                
+                if (imageElement) {
+                  // 1️⃣ Try Amazon dynamic images (BEST)
+                  const dynamic = imageElement.getAttribute('data-a-dynamic-image');
+                  if (dynamic) {
+                    try {
+                      const sources = JSON.parse(dynamic.replace(/&quot;/g, '"'));
+                      let maxArea = 0;
+                
+                      Object.entries(sources).forEach(([url, [w, h]]) => {
+                        const area = w * h;
+                        if (area > maxArea) {
+                          maxArea = area;
+                          imageUrl = url;
+                        }
+                      });
+                    } catch {}
+                  }
+                
+                  // 2️⃣ Fallbacks
+                  if (!imageUrl) {
+                    imageUrl =
+                      imageElement.getAttribute('data-old-hires') ||
+                      imageElement.getAttribute('data-a-hires') ||
+                      imageElement.src;
+                  }
+                }
+
                 
                 const asinMatch = rawUrl.match(/\/dp\/([A-Z0-9]{10})/) || rawUrl.match(/\/deal\/([A-Z0-9]{10})/) || rawUrl.match(/\/product\/([A-Z0-9]{10})/);
                 const asin = asinMatch ? asinMatch[1] : null;
