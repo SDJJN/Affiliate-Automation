@@ -89,39 +89,11 @@ async function scrapeCategory(page, category) {
                 const rawUrl = urlElement ? urlElement.href : '';
                 
                const imageElement = el.querySelector('img');
-                    
-                    let imageUrl = '';
-                    if (imageElement) {
-                      // 1️⃣ Check <picture> sources first
-                      const picture = imageElement.closest('picture');
-                      if (picture) {
-                        const sources = picture.querySelectorAll('source');
-                    
-                        for (const source of sources) {
-                          const srcset = source.getAttribute('srcset');
-                          if (!srcset) continue;
-                    
-                          const match = srcset.match(/([^,\s]+)\s2x/);
-                          if (match) {
-                            imageUrl = match[1];
-                            break;
-                          }
-                        }
-                      }
-                    
-                      // 2️⃣ Fallback: img srcset
-                      if (!imageUrl && imageElement.srcset) {
-                        const match = imageElement.srcset.match(/([^,\s]+)\s2x/);
-                        if (match) {
-                          imageUrl = match[1];
-                        }
-                      }
-                    
-                      // 3️⃣ Final fallback
-                      if (!imageUrl) {
-                        imageUrl = imageElement.src;
-                      }
-                    }
+                const imageUrl =
+                  imageElement?.closest('picture')?.querySelector('source[srcset*=" 2x"]')?.getAttribute('srcset')?.match(/([^,\s]+)\s2x/)?.[1]
+                  || imageElement?.srcset?.match(/([^,\s]+)\s2x/)?.[1]
+                  || imageElement?.src || '';
+
 
 
                 
