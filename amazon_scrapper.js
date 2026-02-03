@@ -87,21 +87,20 @@ async function scrapeCategory(page, category) {
                 
                 const urlElement = el.querySelector('a.a-link-normal');
                 const rawUrl = urlElement ? urlElement.href : '';
+
+                const TEL = el.querySelector('img'); 
+                const TELIMG = TEL ? TEL.src : '';
                 
-               const imageElement = el.querySelector('img');
+                const imageElement = el.querySelector('img');
                 const imageUrl =
                   (imageElement?.closest('picture')?.querySelector('source[srcset*=" 2x"]')?.getAttribute('srcset')?.match(/(.+?)\s2x/)?.[1]
                   || imageElement?.srcset?.match(/(.+?)\s2x/)?.[1]
                   || imageElement?.src || '').trim();
 
-             const imageElement1 = el.querySelector('img'); 
-                const imageUrl1 = imageElement ? imageElement.src : '';
-
-                
                 const asinMatch = rawUrl.match(/\/dp\/([A-Z0-9]{10})/) || rawUrl.match(/\/deal\/([A-Z0-9]{10})/) || rawUrl.match(/\/product\/([A-Z0-9]{10})/);
                 const asin = asinMatch ? asinMatch[1] : null;
 
-                return { title, rawUrl, asin, imageUrl, imageUrl1  };
+                return { title, rawUrl, asin, imageUrl, TELIMG   };
             }, element);
 
             if (dealData.asin && dealData.title) {
@@ -115,7 +114,7 @@ async function scrapeCategory(page, category) {
                     title: dealData.title,
                     discount: discount,
                     imageUrl: dealData.imageUrl,
-                    imageUrl1: dealData.imageUrl1,
+                    TELIMG: dealData.TELIMG,
                     affiliate_link: cleanUrl,
                     link: `https://www.amazon.in/dp/${dealData.asin}`
                 });
