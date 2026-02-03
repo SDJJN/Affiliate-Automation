@@ -88,11 +88,12 @@ async function scrapeCategory(page, category) {
                 const urlElement = el.querySelector('a.a-link-normal');
                 const rawUrl = urlElement ? urlElement.href : '';
                 
-                const imageElement = el.querySelector('img');
+               const imageElement = el.querySelector('img');
                 const imageUrl =
-                  imageElement?.closest('picture')?.querySelector('source[srcset*=" 2x"]')?.getAttribute('srcset')?.match(/(.+?)\s2x/)?.[1]
+                  (imageElement?.closest('picture')?.querySelector('source[srcset*=" 2x"]')?.getAttribute('srcset')?.match(/(.+?)\s2x/)?.[1]
                   || imageElement?.srcset?.match(/(.+?)\s2x/)?.[1]
-                  || imageElement?.src || '';
+                  || imageElement?.src || '').trim();
+
                 
                 const asinMatch = rawUrl.match(/\/dp\/([A-Z0-9]{10})/) || rawUrl.match(/\/deal\/([A-Z0-9]{10})/) || rawUrl.match(/\/product\/([A-Z0-9]{10})/);
                 const asin = asinMatch ? asinMatch[1] : null;
