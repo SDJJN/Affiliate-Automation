@@ -88,10 +88,11 @@ async function scrapeCategory(page, category) {
                 const urlElement = el.querySelector('a.a-link-normal');
                 const rawUrl = urlElement ? urlElement.href : '';
 
-                const TEL = el.querySelector('img'); 
-                const TELIMG = TEL ? TEL.src : '';
+                 
+                
                 
                 const imageElement = el.querySelector('img');
+                const TELIMG = imageElement?imageElement.src : '';
                 const imageUrl =
                   (imageElement?.closest('picture')?.querySelector('source[srcset*=" 2x"]')?.getAttribute('srcset')?.match(/(.+?)\s2x/)?.[1]
                   || imageElement?.srcset?.match(/(.+?)\s2x/)?.[1]
