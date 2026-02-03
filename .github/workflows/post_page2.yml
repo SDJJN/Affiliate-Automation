@@ -27,7 +27,7 @@ jobs:
 
       - name: Run posting script
         env:
-          POSTING_TOKEN: ${{ secrets.POSTING_TOKEN }}
+          POSTING_TOKEN: ${{ secrets.Page_access_token_sacstatus1 }}
         run: python post_to_facebook.py --page 275406478990983
 
       - name: Commit and push changes
