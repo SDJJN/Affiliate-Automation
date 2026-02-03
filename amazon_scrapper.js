@@ -89,35 +89,40 @@ async function scrapeCategory(page, category) {
                 const rawUrl = urlElement ? urlElement.href : '';
                 
                const imageElement = el.querySelector('img');
-                
-                let imageUrl = '';
-                
-                if (imageElement) {
-                  // 1️⃣ Try Amazon dynamic images (BEST)
-                  const dynamic = imageElement.getAttribute('data-a-dynamic-image');
-                  if (dynamic) {
-                    try {
-                      const sources = JSON.parse(dynamic.replace(/&quot;/g, '"'));
-                      let maxArea = 0;
-                
-                      Object.entries(sources).forEach(([url, [w, h]]) => {
-                        const area = w * h;
-                        if (area > maxArea) {
-                          maxArea = area;
-                          imageUrl = url;
+                    
+                    let imageUrl = '';
+                    if (imageElement) {
+                      // 1️⃣ Check <picture> sources first
+                      const picture = imageElement.closest('picture');
+                      if (picture) {
+                        const sources = picture.querySelectorAll('source');
+                    
+                        for (const source of sources) {
+                          const srcset = source.getAttribute('srcset');
+                          if (!srcset) continue;
+                    
+                          const match = srcset.match(/([^,\s]+)\s2x/);
+                          if (match) {
+                            imageUrl = match[1];
+                            break;
+                          }
                         }
-                      });
-                    } catch {}
-                  }
-                
-                  // 2️⃣ Fallbacks
-                  if (!imageUrl) {
-                    imageUrl =
-                      imageElement.getAttribute('data-old-hires') ||
-                      imageElement.getAttribute('data-a-hires') ||
-                      imageElement.src;
-                  }
-                }
+                      }
+                    
+                      // 2️⃣ Fallback: img srcset
+                      if (!imageUrl && imageElement.srcset) {
+                        const match = imageElement.srcset.match(/([^,\s]+)\s2x/);
+                        if (match) {
+                          imageUrl = match[1];
+                        }
+                      }
+                    
+                      // 3️⃣ Final fallback
+                      if (!imageUrl) {
+                        imageUrl = imageElement.src;
+                      }
+                    }
+
 
                 
                 const asinMatch = rawUrl.match(/\/dp\/([A-Z0-9]{10})/) || rawUrl.match(/\/deal\/([A-Z0-9]{10})/) || rawUrl.match(/\/product\/([A-Z0-9]{10})/);
