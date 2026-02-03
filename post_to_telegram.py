@@ -13,21 +13,34 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHANNEL_ID")
 NEW_DEALS_FILE = "new_deals.json"
 LAST_POSTED_FILE = "last_posted_tele.json"
 
-POST_LIMIT_PER_RUN = 2   # 👈 only 2 posts every 15 min
-SLEEP_BETWEEN_POSTS = 2  # seconds
-# ==========================================
+POST_LIMIT_PER_RUN = 2
+SLEEP_BETWEEN_POSTS = 2
+# =========================================
 
 
 def extract_discount_value(discount_str):
-    """
-    Extracts numeric discount value from strings like:
-    '65%', 'Up to 70 %', '₹2,000 off'
-    """
+    """Extract numeric discount value from text"""
     try:
-        numbers = ''.join(filter(str.isdigit, discount_str))
-        return int(numbers) if numbers else 0
+        nums = ''.join(filter(str.isdigit, discount_str))
+        return int(nums) if nums else 0
     except:
         return 0
+
+
+def download_image(url, filename="temp_tele.jpg"):
+    """Download image locally so Telegram always accepts it"""
+    if not url:
+        return None
+    try:
+        headers = {"User-Agent": "Mozilla/5.0"}
+        r = requests.get(url, headers=headers, timeout=15)
+        if r.status_code == 200 and "image" in r.headers.get("Content-Type", ""):
+            with open(filename, "wb") as f:
+                f.write(r.content)
+            return filename
+    except:
+        pass
+    return None
 
 
 def post_to_telegram():
@@ -39,15 +52,15 @@ def post_to_telegram():
         print("❌ new_deals.json not found.")
         return
 
-    # Load all deals
+    # Load deals
     try:
         with open(NEW_DEALS_FILE, "r") as f:
             all_deals = json.load(f)
     except Exception as e:
-        print(f"❌ Error reading new_deals.json: {e}")
+        print(f"❌ Error loading deals: {e}")
         return
 
-    # Load posting history
+    # Load history
     last_posted = []
     if os.path.exists(LAST_POSTED_FILE):
         try:
@@ -56,7 +69,7 @@ def post_to_telegram():
         except:
             last_posted = []
 
-    # Filter already posted deals
+    # Filter unposted deals
     available_deals = [
         d for d in all_deals
         if d.get("link") not in last_posted
@@ -72,7 +85,6 @@ def post_to_telegram():
         reverse=True
     )
 
-    # Pick only top N deals
     deals_to_post = available_deals[:POST_LIMIT_PER_RUN]
 
     print(f"🚀 Posting {len(deals_to_post)} highest discount deals...")
@@ -86,35 +98,63 @@ def post_to_telegram():
             "#AmazonDeals #BestDeals #ShopNow"
         )
 
-        try:
-            if deal.get("imageUrl"):
-                url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
-                payload = {
-                    "chat_id": TELEGRAM_CHAT_ID,
-                    "photo": deal["imageUrl"],
-                    "caption": message
-                }
-            else:
-                url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-                payload = {
+        posted = False
+
+        # ✅ Use TELIMG only
+        telimg_url = deal.get("TELIMG")
+        if telimg_url:
+            telimg_url = telimg_url.split("?")[0]  # remove tracking params
+
+        image_path = download_image(telimg_url)
+
+        # Try image upload
+        if image_path:
+            try:
+                with open(image_path, "rb") as img:
+                    response = requests.post(
+                        f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto",
+                        files={"photo": img},
+                        data={
+                            "chat_id": TELEGRAM_CHAT_ID,
+                            "caption": message
+                        },
+                        timeout=20
+                    )
+
+                if response.status_code == 200:
+                    posted = True
+                else:
+                    print("⚠️ Image upload failed, sending text")
+
+            except Exception as e:
+                print(f"⚠️ Image exception: {e}")
+
+            finally:
+                if os.path.exists(image_path):
+                    os.remove(image_path)
+
+        # Fallback to text
+        if not posted:
+            response = requests.post(
+                f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
+                data={
                     "chat_id": TELEGRAM_CHAT_ID,
                     "text": message
-                }
-
-            response = requests.post(url, data=payload, timeout=15)
-
+                },
+                timeout=15
+            )
             if response.status_code == 200:
-                print(f"✅ Posted ASIN: {deal.get('asin')}")
-                last_posted.append(deal.get("link"))
-            else:
-                print(f"❌ Telegram error: {response.text}")
+                posted = True
 
-            time.sleep(SLEEP_BETWEEN_POSTS)
+        if posted:
+            print(f"✅ Posted ASIN: {deal.get('asin')}")
+            last_posted.append(deal.get("link"))
+        else:
+            print(f"❌ Failed to post ASIN: {deal.get('asin')}")
 
-        except Exception as e:
-            print(f"❌ Exception posting deal: {e}")
+        time.sleep(SLEEP_BETWEEN_POSTS)
 
-    # Save updated history
+    # Save history
     with open(LAST_POSTED_FILE, "w") as f:
         json.dump(last_posted, f, indent=4)
 
