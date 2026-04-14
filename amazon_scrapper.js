@@ -36,6 +36,38 @@ async function autoScroll(page) {
     });
 }
 
+async function getAmazonShortUrl(longUrl) {
+    try {
+        const shortApi = `https://www.amazon.com/associates/sitestripe/getShortUrl?longUrl=${encodeURIComponent(longUrl)}`;
+
+        const response = await fetch(shortApi, {
+            headers: {
+                'User-Agent': userAgents[0]
+            }
+        });
+
+        const data = await response.json();
+
+        if (data?.ok && data?.shortUrl) {
+            return {
+                affiliate_link: data.shortUrl,
+                longurl: longUrl
+            };
+        }
+
+        return {
+            affiliate_link: longUrl,
+            longurl: longUrl
+        };
+    } catch (error) {
+        console.log("Short URL failed:", error.message);
+        return {
+            affiliate_link: longUrl,
+            longurl: longUrl
+        };
+    }
+}
+
 async function fetchProductDetails(page, url) {
     try {
         console.log(`Fetching details for: ${url}`);
@@ -109,6 +141,7 @@ async function scrapeCategory(page, category) {
                 const discount = await element.$eval('.a-badge-text, .a-size-mini', el => el.textContent.trim()).catch(() => '50%+');
                 
                 const cleanUrl = `https://www.amazon.in/dp/${dealData.asin}?tag=${AMAZON_AFFILIATE_TAG}`;
+                const shortLinkData = await getAmazonShortUrl(cleanUrl);
                 
                 deals.push({
                     asin: dealData.asin,
@@ -116,7 +149,8 @@ async function scrapeCategory(page, category) {
                     discount: discount,
                     imageUrl: dealData.imageUrl,
                     TELIMG: dealData.TELIMG,
-                    affiliate_link: cleanUrl,
+                    affiliate_link: shortLinkData.affiliate_link,
+                    longurl: shortLinkData.longurl,
                     link: `https://www.amazon.in/dp/${dealData.asin}`
                 });
             }
