@@ -36,17 +36,27 @@ async function autoScroll(page) {
     });
 }
 
-async function getAmazonShortUrl(longUrl) {
+async function getAmazonShortUrl(page, longUrl) {
     try {
         const shortApi = `https://www.amazon.com/associates/sitestripe/getShortUrl?longUrl=${encodeURIComponent(longUrl)}`;
 
-        const response = await fetch(shortApi, {
-            headers: {
-                'User-Agent': userAgents[0]
-            }
-        });
+        const responseText = await page.evaluate(async (url) => {
+            const res = await fetch(url, {
+                credentials: 'include'
+            });
+            return await res.text();
+        }, shortApi);
 
-        const data = await response.json();
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch {
+            console.log("Amazon returned HTML instead of JSON");
+            return {
+                affiliate_link: longUrl,
+                longurl: longUrl
+            };
+        }
 
         if (data?.ok && data?.shortUrl) {
             return {
@@ -141,7 +151,7 @@ async function scrapeCategory(page, category) {
                 const discount = await element.$eval('.a-badge-text, .a-size-mini', el => el.textContent.trim()).catch(() => '50%+');
                 
                 const cleanUrl = `https://www.amazon.in/dp/${dealData.asin}?tag=${AMAZON_AFFILIATE_TAG}`;
-                const shortLinkData = await getAmazonShortUrl(cleanUrl);
+                const shortLinkData = await getAmazonShortUrl(page, cleanUrl);
                 
                 deals.push({
                     asin: dealData.asin,
