@@ -36,27 +36,32 @@ async function autoScroll(page) {
     });
 }
 
-async function getAmazonShortUrl(page, longUrl) {
+async function getAmazonShortUrl(browser, longUrl) {
+    let shortPage;
+
     try {
-        const shortApi = `https://www.amazon.com/associates/sitestripe/getShortUrl?longUrl=${longUrl}`;
+        shortPage = await browser.newPage();
+        await shortPage.setUserAgent(userAgents[0]);
 
-        // get all cookies from current browser
-        const cookies = await page.cookies();
-        const cookieHeader = cookies
-            .map(c => `${c.name}=${c.value}`)
-            .join('; ');
-
-        const response = await page.goto(shortApi, {
-            waitUntil: 'domcontentloaded',
+        // warm amazon.com cookies
+        await shortPage.goto("https://www.amazon.com", {
+            waitUntil: "domcontentloaded",
             timeout: 30000
         });
 
-        const responseText = await page.evaluate(() => document.body.innerText);
+        const shortApi = `https://www.amazon.com/associates/sitestripe/getShortUrl?longUrl=${encodeURIComponent(longUrl)}`;
+
+        await shortPage.goto(shortApi, {
+            waitUntil: "domcontentloaded",
+            timeout: 30000
+        });
+
+        const responseText = await shortPage.evaluate(() => document.body.innerText);
 
         let data;
         try {
             data = JSON.parse(responseText);
-        } catch (e) {
+        } catch {
             console.log("Short URL JSON parse failed");
             return {
                 affiliate_link: longUrl,
@@ -82,6 +87,8 @@ async function getAmazonShortUrl(page, longUrl) {
             affiliate_link: longUrl,
             longurl: longUrl
         };
+    } finally {
+        if (shortPage) await shortPage.close();
     }
 }
 
@@ -158,7 +165,7 @@ async function scrapeCategory(page, category) {
                 const discount = await element.$eval('.a-badge-text, .a-size-mini', el => el.textContent.trim()).catch(() => '50%+');
                 
                 const cleanUrl = `https://www.amazon.in/dp/${dealData.asin}?tag=${AMAZON_AFFILIATE_TAG}`;
-                const shortLinkData = await getAmazonShortUrl(page, cleanUrl);
+                const shortLinkData = await getAmazonShortUrl(page.browser(), cleanUrl);
                 
                 deals.push({
                     asin: dealData.asin,
