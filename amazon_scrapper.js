@@ -122,17 +122,28 @@ async function scrapeCategory(page, category) {
             console.log(`Navigating to: ${category.url}`);
             await page.goto(category.url, { waitUntil: 'domcontentloaded', timeout: 90000 });
             
-            await page.waitForSelector('[data-testid="grid-deals-container"], .grid-deals-container, #slot-15', { timeout: 30000 }).catch(e => console.log('Wait timeout, continuing...'));
+            await page.waitForSelector(
+                '[data-testid="deal-card"], div[data-deal-id], [class*="DealGridItem-module"]',
+                { timeout: 30000 }
+            ).catch(() => console.log('Wait timeout, continuing...'));
             
             await autoScroll(page);
             await new Promise(resolve => setTimeout(resolve, 5000));
+            console.log("Current page URL:", await page.url());
             
             await page.screenshot({ path: 'amazon_deals_screenshot.png' });
         } catch (e) {
             console.log(`Navigation error: ${e.message}`);
         }
         
-        const dealElements = await page.$$('.ProductCard-module__card, [class*="ProductCard-module__card"], [data-testid="deal-card"]');
+        const dealElements = await page.$$(
+            '[data-testid="deal-card"], \
+            div[data-deal-id], \
+            .DealGridItem-module__dealItem, \
+            .DealContent-module__dealCard, \
+            [class*="DealGridItem-module"], \
+            [class*="ProductCard-module"]'
+        );
         console.log(`Found ${dealElements.length} potential deal cards in ${category.name}`);
 
         const deals = [];
