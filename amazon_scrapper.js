@@ -3,6 +3,7 @@ const puppeteer = require('puppeteer-core');
 const fs = require('fs').promises;
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const shortLinkCache = new Map();
 
 // Configuration
 const AMAZON_AFFILIATE_TAG = process.env.AMAZON_TAG || 'sdjjn-20';
@@ -40,9 +41,15 @@ async function autoScroll(page) {
 
 
 async function getAmazonShortUrl(browser, mainPage, longUrl) {
+
+    
     let shortPage;
 
     try {
+        if (shortLinkCache.has(longUrl)) {
+            return shortLinkCache.get(longUrl);
+        }
+        
         shortPage = await browser.newPage();
         await shortPage.setUserAgent(userAgents[0]);
 
@@ -84,11 +91,14 @@ async function getAmazonShortUrl(browser, mainPage, longUrl) {
         }
 
         if (data?.ok && data?.shortUrl) {
-            return {
-                affiliate_link: data.shortUrl,
-                longurl: longUrl
-            };
-        }
+        const result = {
+            affiliate_link: data.shortUrl,
+                        longurl: longUrl
+                    };
+            
+                shortLinkCache.set(longUrl, result); // ✅ ADD HERE
+                return result;
+            }
 
         return {
             affiliate_link: longUrl,
