@@ -38,20 +38,26 @@ async function autoScroll(page) {
 
 async function getAmazonShortUrl(page, longUrl) {
     try {
-        const shortApi = `https://www.amazon.com/associates/sitestripe/getShortUrl?longUrl=${encodeURIComponent(longUrl)}`;
+        const shortApi = `https://www.amazon.com/associates/sitestripe/getShortUrl?longUrl=${longUrl}`;
 
-        const responseText = await page.evaluate(async (url) => {
-            const res = await fetch(url, {
-                credentials: 'include'
-            });
-            return await res.text();
-        }, shortApi);
+        // get all cookies from current browser
+        const cookies = await page.cookies();
+        const cookieHeader = cookies
+            .map(c => `${c.name}=${c.value}`)
+            .join('; ');
+
+        const response = await page.goto(shortApi, {
+            waitUntil: 'domcontentloaded',
+            timeout: 30000
+        });
+
+        const responseText = await page.evaluate(() => document.body.innerText);
 
         let data;
         try {
             data = JSON.parse(responseText);
-        } catch {
-            console.log("Amazon returned HTML instead of JSON");
+        } catch (e) {
+            console.log("Short URL JSON parse failed");
             return {
                 affiliate_link: longUrl,
                 longurl: longUrl
@@ -69,6 +75,7 @@ async function getAmazonShortUrl(page, longUrl) {
             affiliate_link: longUrl,
             longurl: longUrl
         };
+
     } catch (error) {
         console.log("Short URL failed:", error.message);
         return {
@@ -194,6 +201,12 @@ async function main() {
         const page = await browser.newPage();
         await page.setUserAgent(userAgents[0]);
         await page.setViewport({ width: 1280, height: 1280 });
+
+        // ✅ ADD THIS HERE
+        await page.goto("https://www.amazon.com", {
+            waitUntil: "domcontentloaded",
+            timeout: 30000
+        });
 
         const categories = [
             { name: 'Today\'s Deals', url: `${AMAZON_DEALS_BASE}${DISCOUNT_FILTER}` }
