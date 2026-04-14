@@ -36,6 +36,9 @@ async function autoScroll(page) {
     });
 }
 
+
+
+
 async function getAmazonShortUrl(browser, mainPage, longUrl) {
     let shortPage;
 
@@ -43,13 +46,13 @@ async function getAmazonShortUrl(browser, mainPage, longUrl) {
         shortPage = await browser.newPage();
         await shortPage.setUserAgent(userAgents[0]);
 
-        // ✅ copy cookies from main page
+        // copy working cookies from main page
         const cookies = await mainPage.cookies();
         if (cookies.length) {
             await shortPage.setCookie(...cookies);
         }
 
-        // warm amazon.com domain
+        // open amazon.com once so domain cookies become active
         await shortPage.goto("https://www.amazon.com", {
             waitUntil: "domcontentloaded",
             timeout: 30000
@@ -57,18 +60,23 @@ async function getAmazonShortUrl(browser, mainPage, longUrl) {
 
         const shortApi = `https://www.amazon.com/associates/sitestripe/getShortUrl?longUrl=${encodeURIComponent(longUrl)}`;
 
-        await shortPage.goto(shortApi, {
-            waitUntil: "domcontentloaded",
-            timeout: 30000
-        });
-
-        const responseText = await shortPage.evaluate(() => document.body.innerText);
+        // ✅ IMPORTANT: use fetch instead of goto
+        const responseText = await shortPage.evaluate(async (url) => {
+            const res = await fetch(url, {
+                method: "GET",
+                credentials: "include",
+                headers: {
+                    "accept": "application/json, text/plain, */*"
+                }
+            });
+            return await res.text();
+        }, shortApi);
 
         let data;
         try {
             data = JSON.parse(responseText);
         } catch {
-            console.log("Short URL JSON parse failed");
+            console.log("Short URL JSON parse failed:", responseText.slice(0, 200));
             return {
                 affiliate_link: longUrl,
                 longurl: longUrl
@@ -97,6 +105,16 @@ async function getAmazonShortUrl(browser, mainPage, longUrl) {
         if (shortPage) await shortPage.close();
     }
 }
+
+
+
+
+
+
+
+
+
+
 
 async function fetchProductDetails(page, url) {
     try {
