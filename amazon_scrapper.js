@@ -39,83 +39,107 @@ async function autoScroll(page) {
 
 
 
-
 async function getAmazonShortUrl(browser, mainPage, longUrl) {
-
-    
     let shortPage;
 
     try {
+        // ✅ cache hit
         if (shortLinkCache.has(longUrl)) {
             return shortLinkCache.get(longUrl);
         }
-        
+
         shortPage = await browser.newPage();
         await shortPage.setUserAgent(userAgents[0]);
 
-        // copy working cookies from main page
+        // ✅ copy cookies from main page
         const cookies = await mainPage.cookies();
         if (cookies.length) {
             await shortPage.setCookie(...cookies);
         }
 
-        // open amazon.com once so domain cookies become active
+        // ✅ activate amazon.com domain cookies
         await shortPage.goto("https://www.amazon.com", {
             waitUntil: "domcontentloaded",
             timeout: 30000
         });
 
-        const shortApi = `https://www.amazon.com/associates/sitestripe/getShortUrl?longUrl=${encodeURIComponent(longUrl)}`;
+        const shortApi =
+            `https://www.amazon.com/associates/sitestripe/getShortUrl?longUrl=${encodeURIComponent(longUrl)}`;
 
-        // ✅ IMPORTANT: use fetch instead of goto
+        // ✅ use browser fetch instead of navigation
         const responseText = await shortPage.evaluate(async (url) => {
             const res = await fetch(url, {
                 method: "GET",
                 credentials: "include",
                 headers: {
-                    "accept": "application/json, text/plain, */*"
+                    accept: "application/json, text/plain, */*"
                 }
             });
+
             return await res.text();
         }, shortApi);
+
+        // ✅ HTML response means SiteStripe auth unavailable
+        if (responseText.trim().toLowerCase().startsWith('<!doctype html')) {
+            const result = {
+                affiliate_link: longUrl,
+                longurl: longUrl
+            };
+
+            shortLinkCache.set(longUrl, result);
+            return result;
+        }
 
         let data;
         try {
             data = JSON.parse(responseText);
         } catch {
-            console.log("Short URL JSON parse failed:", responseText.slice(0, 200));
-            return {
+            const result = {
                 affiliate_link: longUrl,
                 longurl: longUrl
             };
+
+            shortLinkCache.set(longUrl, result);
+            return result;
         }
 
+        // ✅ success short URL
         if (data?.ok && data?.shortUrl) {
-        const result = {
-            affiliate_link: data.shortUrl,
-                        longurl: longUrl
-                    };
-            
-                shortLinkCache.set(longUrl, result); // ✅ ADD HERE
-                return result;
-            }
+            const result = {
+                affiliate_link: data.shortUrl,
+                longurl: longUrl
+            };
 
-        return {
+            shortLinkCache.set(longUrl, result);
+            return result;
+        }
+
+        // ✅ fallback
+        const result = {
             affiliate_link: longUrl,
             longurl: longUrl
         };
+
+        shortLinkCache.set(longUrl, result);
+        return result;
 
     } catch (error) {
         console.log("Short URL failed:", error.message);
-        return {
+
+        const result = {
             affiliate_link: longUrl,
             longurl: longUrl
         };
+
+        shortLinkCache.set(longUrl, result);
+        return result;
+
     } finally {
-        if (shortPage) await shortPage.close();
+        if (shortPage) {
+            await shortPage.close();
+        }
     }
 }
-
 
 
 
