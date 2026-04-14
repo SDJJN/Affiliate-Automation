@@ -36,14 +36,20 @@ async function autoScroll(page) {
     });
 }
 
-async function getAmazonShortUrl(browser, longUrl) {
+async function getAmazonShortUrl(browser, mainPage, longUrl) {
     let shortPage;
 
     try {
         shortPage = await browser.newPage();
         await shortPage.setUserAgent(userAgents[0]);
 
-        // warm amazon.com cookies
+        // ✅ copy cookies from main page
+        const cookies = await mainPage.cookies();
+        if (cookies.length) {
+            await shortPage.setCookie(...cookies);
+        }
+
+        // warm amazon.com domain
         await shortPage.goto("https://www.amazon.com", {
             waitUntil: "domcontentloaded",
             timeout: 30000
@@ -176,7 +182,7 @@ async function scrapeCategory(page, category) {
                 const discount = await element.$eval('.a-badge-text, .a-size-mini', el => el.textContent.trim()).catch(() => '50%+');
                 
                 const cleanUrl = `https://www.amazon.in/dp/${dealData.asin}?tag=${AMAZON_AFFILIATE_TAG}`;
-                const shortLinkData = await getAmazonShortUrl(page.browser(), cleanUrl);
+                const shortLinkData = await getAmazonShortUrl(page.browser(), page, cleanUrl);
                 
                 deals.push({
                     asin: dealData.asin,
