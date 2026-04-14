@@ -152,6 +152,8 @@ async function scrapeCategory(page, category) {
             ).catch(() => console.log('Wait timeout, continuing...'));
             
             await autoScroll(page);
+            await new Promise(resolve => setTimeout(resolve, 10000));
+            await autoScroll(page);
             await new Promise(resolve => setTimeout(resolve, 5000));
             console.log("Current page URL:", await page.url());
             
@@ -226,7 +228,16 @@ async function main() {
     try {
         const launchOptions = {
             headless: "new",
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+            args: [
+                        '--no-sandbox',
+                        '--disable-setuid-sandbox',
+                        '--disable-dev-shm-usage',
+                        '--disable-blink-features=AutomationControlled',
+                        '--window-size=1366,2200',
+                        '--start-maximized',
+                        '--lang=en-IN',
+                        '--disable-features=IsolateOrigins,site-per-process'
+                    ],
             timeout: 60000
         };
 
@@ -241,6 +252,22 @@ async function main() {
 
         browser = await puppeteer.launch(launchOptions);
         const page = await browser.newPage();
+
+
+        await page.evaluateOnNewDocument(() => {
+            Object.defineProperty(navigator, 'webdriver', {
+                get: () => false
+            });
+        
+            Object.defineProperty(navigator, 'platform', {
+                get: () => 'Win32'
+            });
+        
+            Object.defineProperty(navigator, 'languages', {
+                get: () => ['en-IN', 'en']
+            });
+        });
+        
         await page.setUserAgent(userAgents[0]);
         await page.setViewport({ width: 1280, height: 1280 });
 
