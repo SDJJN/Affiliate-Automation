@@ -6,7 +6,7 @@ const { v4: uuidv4 } = require('uuid');
 const shortLinkCache = new Map();
 
 // Configuration
-const AMAZON_AFFILIATE_TAG = process.env.AMAZON_TAG || 'sdjjn-20';
+const AMAZON_AFFILIATE_TAG = process.env.AMAZON_TAG || 'ascal-21';
 const NEW_DEALS_FILE = 'new_deals.json';
 const LAST_POSTED_FILE = 'last_posted.json';
 const DISCOUNT_FILTER = '&discounts-widget=%2522%257B%255C%2522state%255C%2522%253A%257B%255C%2522refinementFilters%255C%2522%253A%257B%255C%2522reviewRating%255C%2522%253A%255B%255C%25224%255C%2522%255D%257D%252C%255C%2522rangeRefinementFilters%255C%2522%253A%257B%255C%2522percentOff%255C%2522%253A%257B%255C%2522min%255C%2522%253A50%252C%255C%2522max%255C%2522%253A100%257D%257D%257D%252C%255C%2522version%255C%2522%253A1%257D%2522';
