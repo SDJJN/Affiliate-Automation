@@ -73,6 +73,7 @@ async function getAmazonShortUrl(browser, mainPage, longUrl) {
                     if (json && (json.shortUrl || json.longUrl)) {
                         const result = {
                             affiliate_link: json.shortUrl || json.longUrl || longUrl,
+                            shorturl: json.shortUrl || "N/A",
                             longurl: json.longUrl || longUrl
                         };
                         shortLinkCache.set(longUrl, result);
@@ -130,6 +131,7 @@ async function getAmazonShortUrl(browser, mainPage, longUrl) {
         } catch {
             const result = {
                 affiliate_link: longUrl,
+                shorturl: "N/A",
                 longurl: longUrl
             };
 
@@ -141,6 +143,7 @@ async function getAmazonShortUrl(browser, mainPage, longUrl) {
         if (data?.ok && data?.shortUrl) {
             const result = {
                 affiliate_link: data.shortUrl,
+                shorturl: data.shortUrl,
                 longurl: longUrl
             };
 
@@ -151,6 +154,7 @@ async function getAmazonShortUrl(browser, mainPage, longUrl) {
         // ✅ fallback
         const result = {
             affiliate_link: longUrl,
+            shorturl: "N/A",
             longurl: longUrl
         };
 
@@ -361,6 +365,7 @@ async function scrapeCategory(page, category) {
                     imageUrl: dealData.imageUrl,
                     TELIMG: dealData.TELIMG,
                     affiliate_link: shortLinkData.affiliate_link,
+                    shorturl: shortLinkData.shorturl || shortLinkData.affiliate_link,
                     longurl: shortLinkData.longurl,
                     link: `https://www.amazon.in/dp/${dealData.asin}`
                 });
