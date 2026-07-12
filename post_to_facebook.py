@@ -65,7 +65,7 @@ def post_to_facebook(target_page_id):
     msg += f"👉 Buy Now: {deal['affiliate_link']}\n\n"
     msg += f"👉 Buy Now: {deal['affiliate_link']}\n\n"
     msg += "As an Amazon Associate, I earn from qualifying purchases.\n"
-    msg += "#AmazonDeals #BestDeals #Savings #ShopNow"
+    msg += "#AmazonDeals #BestDeals #Savings #ShopNow\n"
     msg += f"👉 Buy Now: {deal['link']}\n\n"
 
 
