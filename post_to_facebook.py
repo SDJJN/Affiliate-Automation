@@ -53,10 +53,13 @@ def post_to_facebook(target_page_id):
     graph = facebook.GraphAPI(access_token=FACEBOOK_TOKEN)
     
     msg = f"🔥 {deal['title']}\n\n"
-    msg += f"💰 Discount: {deal['discount']}\n"
-    msg += f"👉 Link: {deal['affiliate_link']}\n\n"
-    msg += "As an Amazon Associate, I earn from qualifying purchases. #affiliate\n"
+    msg += f"💰 MRP: {deal['price_original']}  ➜  Deal Price: {deal['price_after_discount']}\n"
+    msg += f"🏷️ Discount: {deal['discount']} | {deal['savings']}\n\n"
+    msg += f"👉 Buy Now: {deal['affiliate_link']}\n\n"
+    msg += "As an Amazon Associate, I earn from qualifying purchases.\n"
     msg += "#AmazonDeals #BestDeals #Savings #ShopNow"
+    msg += f"👉 Buy Now: {deal['link']}\n\n"
+
 
     try:
         # Post as a Photo for better engagement if image is available
