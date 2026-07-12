@@ -103,7 +103,7 @@ def post_to_telegram():
             f"👉 Buy Now: {deal.get('affiliate_link')}\n\n"
             "As an Amazon Associate, I earn from qualifying purchases.\n"
             "#AmazonDeals #BestDeals #ShopNow\n"
-            f"👉 Buy Now: {deal.get('link'))}\n\n"
+            f"👉 Buy Now: {deal.get('link')}"
         )
 
         posted = False
