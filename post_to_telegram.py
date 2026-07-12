@@ -92,10 +92,18 @@ def post_to_telegram():
     for deal in deals_to_post:
         message = (
             f"🔥 {deal.get('title', 'Hot Deal')}\n\n"
+            f"💰 Original_Price: {deal.get('price_original', 'N/A')}\n"
+            f"💰 Discount_Price: {deal.get('price_after_discount', 'N/A')}\n"
+            f"💰 Saved: {deal.get('savings', 'N/A')}\n"
             f"💰 Discount: {deal.get('discount', 'N/A')}\n"
-            f"👉 Buy Now: {deal.get('affiliate_link', deal.get('link'))}\n\n"
+            f"👉 Buy Now: {deal.get('affiliate_link')}\n\n"
+            f"👉 Buy Now: {deal.get('affiliate_link')}\n\n"
+            f"👉 Buy Now: {deal.get('affiliate_link')}\n\n"
+            f"👉 Buy Now: {deal.get('affiliate_link')}\n\n"
+            f"👉 Buy Now: {deal.get('affiliate_link')}\n\n"
             "As an Amazon Associate, I earn from qualifying purchases.\n"
-            "#AmazonDeals #BestDeals #ShopNow"
+            "#AmazonDeals #BestDeals #ShopNow\n"
+            f"👉 Buy Now: {deal.get('link'))}\n\n"
         )
 
         posted = False
